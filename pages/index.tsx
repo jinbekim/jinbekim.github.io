@@ -1,46 +1,42 @@
 import Head from "next/head";
 import Link from "next/link";
-import Layout, { siteTitle } from "../components/layout";
-import utilStyles from "../styles/utils.module.css";
-import { getSortedPostsData } from "../lib/posts";
-import Date from "../components/date";
+import { compareDesc, format, parseISO } from "date-fns";
+import { allPosts } from "../.contentlayer/generated";
 
 export async function getStaticProps() {
-  const allPostsData = getSortedPostsData();
-  return {
-    props: {
-      allPostsData,
-    },
-  };
+  const posts = allPosts.sort((a, b) => {
+    return compareDesc(new Date(a.date), new Date(b.date));
+  });
+  return { props: { posts } };
 }
 
-export default function Home({ allPostsData }) {
+function PostCard(post) {
   return (
-    <Layout home>
+    <div className="mb-6">
+      <time dateTime={post.date} className="block text-sm text-slate-600">
+        {format(parseISO(post.date), "LLLL d, yyyy")}
+      </time>
+      <h2 className="text-lg">
+        <Link href={post.url} className="text-blue-700 hover:text-blue-900">
+          {post.title}
+        </Link>
+      </h2>
+    </div>
+  );
+}
+
+export default function Home({ posts }) {
+  return (
+    <div className="mx-auto max-w-2xl py-16 text-center">
       <Head>
-        <title>{siteTitle}</title>
+        <title>Contentlayer Blog Example</title>
       </Head>
-      <section className={utilStyles.headingMd}>
-        <p>[Your Self Introduction]</p>
-        <p>
-          (This is a sample website - you’ll be building a site like this on{" "}
-          <Link href="https://nextjs.org/learn">our Next.js tutorial</Link>.)
-        </p>
-      </section>
-      <section className={`${utilStyles.headingMd} ${utilStyles.padding1px}`}>
-        <h2 className={utilStyles.headingLg}>Blog</h2>
-        <ul className={utilStyles.list}>
-          {allPostsData.map(({ id, date, title }) => (
-            <li className={utilStyles.listItem} key={id}>
-              <Link href={`/posts/${id}`}>{title}</Link>
-              <br />
-              <small className={utilStyles.lightText}>
-                <Date dateString={date} />
-              </small>
-            </li>
-          ))}
-        </ul>
-      </section>
-    </Layout>
+
+      <h1 className="mb-8 text-3xl font-bold">Contentlayer Blog Example</h1>
+
+      {posts.map((post, idx) => (
+        <PostCard key={idx} {...post} />
+      ))}
+    </div>
   );
 }
